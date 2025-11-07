@@ -1,0 +1,35 @@
+{
+  "name": "svelte-api-proxy",
+  "version": "1.0.0",
+  "description": "A self-signed HTTPS reverse proxy for Svelte/Vite dev servers that routes /api/* requests to a configurable local or staging backend while preserving cookies, headers, and SPA fallback, with built-in body/response logging and x-app-environment injection.",
+  "type": "module",
+  "main": "index.js",
+  "bin": {
+    "svelte-api-proxy": "./cli.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/eduardocgarza/svelte-api-proxy.git"
+  },
+  "keywords": [
+    "https",
+    "proxy",
+    "svelte",
+    "vite",
+    "development",
+    "api",
+    "reverse-proxy"
+  ],
+  "author": "Eduardo Garza",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/eduardocgarza/svelte-api-proxy/issues"
+  },
+  "homepage": "https://github.com/eduardocgarza/svelte-api-proxy#readme",
+  "dependencies": {
+    "http-proxy": "^1.18.1"
+  }
+}
