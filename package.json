@@ -1,5 +1,5 @@
 {
-  "name": "svelte-api-proxy",
+  "name": "svelte-api-hybrid-proxy",
   "version": "1.0.1",
   "description": "A self-signed HTTPS reverse proxy for Svelte/Vite dev servers that routes /api/* requests to a configurable local or staging backend while preserving cookies, headers, and SPA fallback, with built-in body/response logging and x-app-environment injection.",
   "type": "module",
