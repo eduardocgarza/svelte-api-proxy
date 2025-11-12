@@ -1,0 +1,32 @@
+{
+	"compilerOptions": {
+		"target": "ES2022",
+		"module": "ESNext",
+		"moduleResolution": "NodeNext",
+		"resolveJsonModule": true,
+		"allowJs": true,
+		"checkJs": false,
+		"noEmit": true,
+		"strict": false,
+		"skipLibCheck": true,
+		"baseUrl": ".",
+		"paths": {
+			"@/*": [
+				"src/*"
+			]
+		},
+		"esModuleInterop": true,
+		"forceConsistentCasingInFileNames": true,
+		"isolatedModules": true
+	},
+	"include": [
+		"src",
+		"cli.js",
+		"index.js",
+		"*.js"
+	],
+	"exclude": [
+		"node_modules",
+		"dist"
+	]
+}

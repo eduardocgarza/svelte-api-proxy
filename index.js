@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 import fs from "fs";
 import path from "path";
 import https from "https";
@@ -187,19 +185,14 @@ export class DevProxy {
   /**
    * Route incoming requests
    */
+
   routeRequest(req, res) {
     res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
 
     if (req.url.startsWith("/api/")) {
       this.apiProxy.web(req, res);
-    } else if (
-      req.url === "/" ||
-      req.url.startsWith("/@") ||
-      req.url.includes(".")
-    ) {
-      this.appProxy.web(req, res);
     } else {
-      this.handleSPAFallback(req, res);
+      this.appProxy.web(req, res);
     }
   }
 
