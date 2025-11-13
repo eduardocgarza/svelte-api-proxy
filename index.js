@@ -159,11 +159,25 @@ export class DevProxy {
    * Setup event handlers for app proxy
    */
   setupAppProxyHandlers(proxy) {
-    proxy.on("error", (error, req, res) => {
-      console.error("[PROXY] App proxy error:", error.message);
-      if (res && !res.headersSent) {
-        res.writeHead(500, { "Content-Type": "text/plain" });
-        res.end("App proxy error");
+    proxy.on("error", (err, req, resOrSocket, head) => {
+      console.error("[PROXY] App proxy error:", err.message);
+      if (err.code === "ECONNREFUSED") {
+        // Handle connection refused gracefully (e.g., app not ready yet)
+        console.warn("[PROXY] App not ready yet, ignoring...");
+        if (resOrSocket.destroy) {
+          resOrSocket.destroy(); // For WS socket
+        }
+        return;
+      }
+      if (resOrSocket && !resOrSocket.headersSent) {
+        if (typeof resOrSocket.writeHead === "function") {
+          // HTTP response
+          resOrSocket.writeHead(500, { "Content-Type": "text/plain" });
+          resOrSocket.end("App proxy error");
+        } else {
+          // WS socket
+          resOrSocket.destroy();
+        }
       }
     });
   }
