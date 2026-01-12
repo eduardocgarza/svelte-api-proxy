@@ -59,51 +59,73 @@ The proxy automatically upgrades WebSocket connections:
 
 ## Configuration
 
-All configuration is done via the `proxyConfig` section in your `package.json`.
+All configuration is done via environment variables with the `PROXY_` prefix.
 
-### Configuration Schema
+### Environment Variables
 
-```typescript
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `PROXY_APP_PORT` | **Yes** | - | Port where your Vite dev server runs (e.g., 5173) |
+| `PROXY_PORT` | **Yes** | - | Port where the HTTPS proxy listens (e.g., 8443) |
+| `PROXY_DEV_DOMAIN` | **Yes** | - | Domain alias for local dev. Must match SSL certificate common name |
+| `PROXY_API_LOCAL` | No | `false` | When `true`, disables SSL verification for local self-signed API certs |
+| `PROXY_API_BASE_URL` | **Yes** | - | Full base URL of the API (e.g., `https://api.example.com`) |
+| `PROXY_CERTS_PATH` | **Yes** | - | Relative or absolute path to directory containing SSL certificates |
+| `PROXY_SHOW_LOGS` | No | `true` | When `true`, logs all proxy requests and responses to console |
+
+### Example .env File
+
+Create a `.env` file in your project root:
+
+```env
+# Proxy Configuration
+PROXY_APP_PORT=5173
+PROXY_PORT=8443
+PROXY_DEV_DOMAIN=dev-example.com
+PROXY_API_LOCAL=false
+PROXY_API_BASE_URL=https://api.example.com
+PROXY_CERTS_PATH=./certs
+PROXY_SHOW_LOGS=true
+```
+
+### Loading Environment Variables
+
+This package expects environment variables to be set before the CLI runs. Use one of these approaches:
+
+**Option 1: dotenv with node -r flag**
+```json
 {
-  proxyConfig: {
-    appPort: number; // Port where Vite dev server runs
-    proxyPort: number; // Port where HTTPS proxy runs
-    devDomain: string; // Domain alias (must match SSL cert name)
-    apiLocal: boolean; // true = local API, false = remote API
-    apiBaseUrl: string; // Base URL of the API to proxy to
-    certsPath: string; // Path to SSL certificates directory
-    showLogs: boolean; // Show/hide proxy request logs
+  "scripts": {
+    "dev:proxy": "node -r dotenv/config ./node_modules/.bin/svelte-api-proxy"
   }
 }
 ```
 
-### Example Configuration
+**Option 2: dotenv-cli**
+```bash
+npm install --save-dev dotenv-cli
+```
 
 ```json
 {
-  "proxyConfig": {
-    "appPort": 5173,
-    "proxyPort": 8443,
-    "devDomain": "dev-example.com",
-    "apiLocal": false,
-    "apiBaseUrl": "https://api.example.com",
-    "certsPath": "./certs",
-    "showLogs": true
+  "scripts": {
+    "dev:proxy": "dotenv -- svelte-api-proxy"
   }
 }
 ```
 
-### Configuration Options Explained
+**Option 3: Shell export**
+```bash
+export PROXY_APP_PORT=5173
+export PROXY_PORT=8443
+# ... etc
+svelte-api-proxy
+```
 
-| Option       | Required | Default | Description                                                            |
-| ------------ | -------- | ------- | ---------------------------------------------------------------------- |
-| `appPort`    | **Yes**  | -       | Port where your Vite dev server runs (e.g., 5173)                      |
-| `proxyPort`  | **Yes**  | -       | Port where the HTTPS proxy listens (e.g., 8443)                        |
-| `devDomain`  | **Yes**  | -       | Domain alias for local dev. Must match SSL certificate common name     |
-| `apiLocal`   | No       | `false` | When `true`, disables SSL verification for local self-signed API certs |
-| `apiBaseUrl` | **Yes**  | -       | Full base URL of the API (e.g., `https://api.example.com`)             |
-| `certsPath`  | **Yes**  | -       | Relative or absolute path to directory containing SSL certificates     |
-| `showLogs`   | No       | `true`  | When `true`, logs all proxy requests and responses to console          |
+**Important:** Add `.env` to your `.gitignore`:
+```bash
+echo ".env" >> .gitignore
+```
 
 ## SSL Certificates
 
@@ -272,11 +294,14 @@ proxy.stop();
 
 ## Troubleshooting
 
-### "proxyConfig not found in package.json"
+### "PROXY_APP_PORT environment variable is required"
 
-**Cause:** The `proxyConfig` section is missing from your `package.json`.
+**Cause:** Required environment variables are not set.
 
-**Solution:** Add the `proxyConfig` section with all required fields.
+**Solution:**
+1. Create a `.env` file in your project root with all required `PROXY_*` variables
+2. Ensure dotenv is loading before the CLI runs (see Configuration section)
+3. Verify your npm script uses `node -r dotenv/config` or `dotenv --`
 
 ### "SSL key not found at: ..."
 
@@ -325,28 +350,34 @@ proxy.stop();
 
 ### Using with Multiple Svelte Apps
 
-You can run multiple Svelte apps with different domain aliases:
+You can run multiple Svelte apps with different domain aliases using separate `.env` files:
 
-**App 1 (`app1.dev-example.com`):**
+**App 1 (`.env.app1`):**
 
-```json
-{
-  "proxyConfig": {
-    "appPort": 5173,
-    "proxyPort": 8443,
-    "devDomain": "app1.dev-example.com"
-  }
-}
+```env
+PROXY_APP_PORT=5173
+PROXY_PORT=8443
+PROXY_DEV_DOMAIN=app1.dev-example.com
+PROXY_API_BASE_URL=https://api.example.com
+PROXY_CERTS_PATH=./certs
 ```
 
-**App 2 (`app2.dev-example.com`):**
+**App 2 (`.env.app2`):**
 
+```env
+PROXY_APP_PORT=5174
+PROXY_PORT=8444
+PROXY_DEV_DOMAIN=app2.dev-example.com
+PROXY_API_BASE_URL=https://api.example.com
+PROXY_CERTS_PATH=./certs
+```
+
+Run with specific env file:
 ```json
 {
-  "proxyConfig": {
-    "appPort": 5174,
-    "proxyPort": 8444,
-    "devDomain": "app2.dev-example.com"
+  "scripts": {
+    "dev:app1": "dotenv -e .env.app1 -- svelte-api-proxy",
+    "dev:app2": "dotenv -e .env.app2 -- svelte-api-proxy"
   }
 }
 ```
@@ -364,6 +395,66 @@ Use a common parent domain for cookie sharing:
 ```
 
 Set cookies with `domain=.dev-example.com` to share across all subdomains.
+
+## Migrating from v1.x to v2.x
+
+Version 2.0 changes configuration from `package.json` to environment variables.
+
+### Step 1: Create .env file
+
+Move your `proxyConfig` values to a `.env` file:
+
+**Before (package.json):**
+```json
+{
+  "proxyConfig": {
+    "appPort": 5173,
+    "proxyPort": 8443,
+    "devDomain": "dev-example.com",
+    "apiLocal": false,
+    "apiBaseUrl": "https://api.example.com",
+    "certsPath": "./certs",
+    "showLogs": true
+  }
+}
+```
+
+**After (.env):**
+```env
+PROXY_APP_PORT=5173
+PROXY_PORT=8443
+PROXY_DEV_DOMAIN=dev-example.com
+PROXY_API_LOCAL=false
+PROXY_API_BASE_URL=https://api.example.com
+PROXY_CERTS_PATH=./certs
+PROXY_SHOW_LOGS=true
+```
+
+### Step 2: Install dotenv
+
+```bash
+npm install --save-dev dotenv
+```
+
+### Step 3: Update npm scripts
+
+```json
+{
+  "scripts": {
+    "dev:proxy": "node -r dotenv/config ./node_modules/.bin/svelte-api-proxy"
+  }
+}
+```
+
+### Step 4: Remove proxyConfig from package.json
+
+Delete the `proxyConfig` section from your `package.json`.
+
+### Step 5: Add .env to .gitignore
+
+```bash
+echo ".env" >> .gitignore
+```
 
 ## License
 

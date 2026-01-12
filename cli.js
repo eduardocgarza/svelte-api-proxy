@@ -1,34 +1,26 @@
 #!/usr/bin/env node
 
 import { DevProxy } from "./index.js";
-import { readFileSync } from "fs";
-import path from "path";
-import { fileURLToPath } from "url";
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 /**
- * Read configuration from the user's package.json
+ * Read configuration from environment variables
+ * Expects PROXY_* prefixed environment variables
+ * The consuming package should load dotenv before running this CLI
  */
 const loadConfig = () => {
-  try {
-    const packageJsonPath = path.resolve(process.cwd(), "package.json");
-    const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf-8"));
-
-    if (!packageJson.proxyConfig) {
-      throw new Error(
-        "proxyConfig not found in package.json. Please add a 'proxyConfig' section to your package.json."
-      );
-    }
-
-    return packageJson.proxyConfig;
-  } catch (error) {
-    if (error.code === "ENOENT") {
-      throw new Error("package.json not found in current directory");
-    }
-    throw error;
-  }
+  return {
+    appPort: process.env.PROXY_APP_PORT
+      ? parseInt(process.env.PROXY_APP_PORT, 10)
+      : undefined,
+    proxyPort: process.env.PROXY_PORT
+      ? parseInt(process.env.PROXY_PORT, 10)
+      : undefined,
+    devDomain: process.env.PROXY_DEV_DOMAIN,
+    apiLocal: process.env.PROXY_API_LOCAL === "true",
+    apiBaseUrl: process.env.PROXY_API_BASE_URL,
+    certsPath: process.env.PROXY_CERTS_PATH,
+    showLogs: process.env.PROXY_SHOW_LOGS !== "false", // defaults to true
+  };
 };
 
 try {

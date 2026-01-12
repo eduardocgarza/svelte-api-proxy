@@ -202,45 +202,60 @@ export default defineConfig({
 
 ---
 
-## Step 6: Configure Proxy in package.json
+## Step 6: Configure Proxy with Environment Variables
 
-Add a `proxyConfig` section to your `package.json`:
+Create a `.env` file in your project root:
+
+```env
+# Proxy Configuration
+PROXY_APP_PORT=5173
+PROXY_PORT=8443
+PROXY_DEV_DOMAIN=dev-example.com
+PROXY_API_LOCAL=false
+PROXY_API_BASE_URL=https://api.example.com
+PROXY_CERTS_PATH=./certs
+PROXY_SHOW_LOGS=true
+```
+
+Install dotenv and update your `package.json` scripts:
+
+```bash
+npm install --save-dev dotenv
+```
 
 ```json
 {
   "name": "my-svelte-app",
-  "proxyConfig": {
-    "appPort": 5173,
-    "proxyPort": 8443,
-    "devDomain": "dev-example.com",
-    "apiLocal": false,
-    "apiBaseUrl": "https://api.example.com",
-    "certsPath": "./certs",
-    "showLogs": true
-  },
   "scripts": {
     "dev": "concurrently -n APP,PROXY -c cyan,magenta \"npm run dev:app\" \"npm run dev:proxy\"",
     "dev:app": "vite dev",
-    "dev:proxy": "svelte-api-proxy"
+    "dev:proxy": "node -r dotenv/config ./node_modules/.bin/svelte-api-proxy"
   },
   "devDependencies": {
-    "svelte-api-proxy": "^1.0.0",
-    "concurrently": "^9.0.0"
+    "svelte-api-proxy": "^2.0.0",
+    "concurrently": "^9.0.0",
+    "dotenv": "^16.3.1"
   }
 }
 ```
 
+**Important:** Add `.env` to your `.gitignore`:
+
+```bash
+echo ".env" >> .gitignore
+```
+
 ### Configuration Explained
 
-| Field        | Value                     | Description                                              |
-| ------------ | ------------------------- | -------------------------------------------------------- |
-| `appPort`    | `5173`                    | Port where Vite runs                                     |
-| `proxyPort`  | `8443`                    | Port where HTTPS proxy runs (what you access in browser) |
-| `devDomain`  | `dev-example.com`         | Your domain alias (must match SSL cert)                  |
-| `apiLocal`   | `false`                   | `false` = remote API, `true` = local API                 |
-| `apiBaseUrl` | `https://api.example.com` | Your API's base URL                                      |
-| `certsPath`  | `./certs`                 | Path to SSL certificates directory                       |
-| `showLogs`   | `true`                    | Show proxy request logs                                  |
+| Variable              | Value                     | Description                                              |
+| --------------------- | ------------------------- | -------------------------------------------------------- |
+| `PROXY_APP_PORT`      | `5173`                    | Port where Vite runs                                     |
+| `PROXY_PORT`          | `8443`                    | Port where HTTPS proxy runs (what you access in browser) |
+| `PROXY_DEV_DOMAIN`    | `dev-example.com`         | Your domain alias (must match SSL cert)                  |
+| `PROXY_API_LOCAL`     | `false`                   | `false` = remote API, `true` = local API                 |
+| `PROXY_API_BASE_URL`  | `https://api.example.com` | Your API's base URL                                      |
+| `PROXY_CERTS_PATH`    | `./certs`                 | Path to SSL certificates directory                       |
+| `PROXY_SHOW_LOGS`     | `true`                    | Show proxy request logs                                  |
 
 ---
 
@@ -336,27 +351,23 @@ You should see:
 
 ### For Remote/Staging API:
 
-```json
-{
-  "proxyConfig": {
-    "apiLocal": false,
-    "apiBaseUrl": "https://api.example.com"
-  }
-}
+Update your `.env` file:
+
+```env
+PROXY_API_LOCAL=false
+PROXY_API_BASE_URL=https://api.example.com
 ```
 
 ### For Local API:
 
-```json
-{
-  "proxyConfig": {
-    "apiLocal": true,
-    "apiBaseUrl": "https://api.dev-example.com:3000"
-  }
-}
+Update your `.env` file:
+
+```env
+PROXY_API_LOCAL=true
+PROXY_API_BASE_URL=https://api.dev-example.com:3000
 ```
 
-When `apiLocal: true`, the proxy disables SSL verification, allowing self-signed certificates on your local API.
+When `PROXY_API_LOCAL=true`, the proxy disables SSL verification, allowing self-signed certificates on your local API.
 
 ---
 
@@ -375,6 +386,7 @@ my-svelte-app/
 │   ├── lib/
 │   │   └── api.js
 │   └── App.svelte
+├── .env
 ├── package.json
 ├── vite.config.js
 └── .gitignore
@@ -386,28 +398,32 @@ my-svelte-app/
 127.0.0.1   dev-myapp.local
 ```
 
+### .env
+
+```env
+PROXY_APP_PORT=5173
+PROXY_PORT=8443
+PROXY_DEV_DOMAIN=dev-myapp.local
+PROXY_API_LOCAL=false
+PROXY_API_BASE_URL=https://api.myapp.com
+PROXY_CERTS_PATH=./certs
+PROXY_SHOW_LOGS=true
+```
+
 ### package.json
 
 ```json
 {
   "name": "my-svelte-app",
-  "proxyConfig": {
-    "appPort": 5173,
-    "proxyPort": 8443,
-    "devDomain": "dev-myapp.local",
-    "apiLocal": false,
-    "apiBaseUrl": "https://api.myapp.com",
-    "certsPath": "./certs",
-    "showLogs": true
-  },
   "scripts": {
     "dev": "concurrently -n APP,PROXY -c cyan,magenta \"npm run dev:app\" \"npm run dev:proxy\"",
     "dev:app": "vite dev",
-    "dev:proxy": "svelte-api-proxy"
+    "dev:proxy": "node -r dotenv/config ./node_modules/.bin/svelte-api-proxy"
   },
   "devDependencies": {
-    "svelte-api-proxy": "^1.0.0",
-    "concurrently": "^9.0.0"
+    "svelte-api-proxy": "^2.0.0",
+    "concurrently": "^9.0.0",
+    "dotenv": "^16.3.1"
   }
 }
 ```
@@ -503,7 +519,7 @@ lsof -ti:8443
 kill -9 <PID>
 ```
 
-Or change ports in `proxyConfig` and `vite.config.js`.
+Or change ports in your `.env` file and `vite.config.js`.
 
 ### Cannot Access https://dev-example.com:8443
 
@@ -523,7 +539,7 @@ Or change ports in `proxyConfig` and `vite.config.js`.
 **Solution:**
 
 1. Test API directly: `curl https://api.example.com/api/health`
-2. Check `apiBaseUrl` is correct
+2. Check `PROXY_API_BASE_URL` is correct in your `.env` file
 3. Verify API server is running
 
 ### CORS Errors

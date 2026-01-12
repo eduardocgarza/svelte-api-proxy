@@ -27,18 +27,32 @@ export class DevProxy {
    * Validates and normalizes the configuration
    */
   validateConfig(config) {
-    const required = [
-      "appPort",
-      "proxyPort",
-      "devDomain",
-      "apiBaseUrl",
-      "certsPath",
+    const requiredEnvVars = [
+      { key: "appPort", envVar: "PROXY_APP_PORT" },
+      { key: "proxyPort", envVar: "PROXY_PORT" },
+      { key: "devDomain", envVar: "PROXY_DEV_DOMAIN" },
+      { key: "apiBaseUrl", envVar: "PROXY_API_BASE_URL" },
+      { key: "certsPath", envVar: "PROXY_CERTS_PATH" },
     ];
 
-    for (const key of required) {
+    for (const { key, envVar } of requiredEnvVars) {
       if (!config[key]) {
-        throw new Error(`${key} is required`);
+        throw new Error(
+          `${envVar} environment variable is required. Set it in your .env file or environment.`
+        );
       }
+    }
+
+    if (isNaN(config.appPort) || config.appPort <= 0) {
+      throw new Error(
+        `PROXY_APP_PORT must be a valid port number. Got: ${process.env.PROXY_APP_PORT}`
+      );
+    }
+
+    if (isNaN(config.proxyPort) || config.proxyPort <= 0) {
+      throw new Error(
+        `PROXY_PORT must be a valid port number. Got: ${process.env.PROXY_PORT}`
+      );
     }
 
     return {
